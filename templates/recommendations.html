@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% block title %}Recommendations{% endblock %}
-
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
@@ -9,150 +7,95 @@
         
         {% if error %}
         <div class="alert alert-warning">{{ error }}</div>
-        {% else %}
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Your Skills Profile</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-3">Based on your responses, here's how your skills align with different academic areas:</p>
-                        <div class="mb-3">
-                            <p><strong>Analytical:</strong> {{ "%.1f"|format(scores.analytical_score) }}/10</p>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (scores.analytical_score/10*100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <p><strong>Creative:</strong> {{ "%.1f"|format(scores.creative_score) }}/10</p>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (scores.creative_score/10*100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <p><strong>Social:</strong> {{ "%.1f"|format(scores.social_score) }}/10</p>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (scores.social_score/10*100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <p><strong>Technical:</strong> {{ "%.1f"|format(scores.technical_score) }}/10</p>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (scores.technical_score/10*100)|round }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card shadow mb-4">
-                    <div class="card-header">
-                        <h5 class="mb-0">Your Personality Profile</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="text-center mb-4">
-                            <h3 class="accent-text mb-2">{{ primary_type.code }}</h3>
-                            <h6>{{ primary_type.name }}</h6>
-                            <p class="small">{{ primary_type.description }}</p>
-                        </div>
-                        
-                        <h6 class="mb-3">Similar Types</h6>
-                        <div class="row">
-                            {% for type in similar_types %}
-                            <div class="col-md-6 mb-3">
-                                <div class="card h-100">
-                                    <div class="card-body p-3">
-                                        <h6 class="accent-text mb-1">{{ type.code }}</h6>
-                                        <p class="small mb-2">{{ type.name }}</p>
-                                        <div class="progress small-progress mb-2">
-                                            <div class="progress-bar" style="width: {{ (type.similarity * 100)|round }}%"></div>
-                                        </div>
-                                        <p class="small text-muted mb-0">{{ "%.0f"|format(type.similarity * 100) }}% Match</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
 
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header">
-                        <h5 class="mb-0">Personality-Based Major Suggestions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for type in [primary_type] + similar_types %}
-                            <div class="col-md-4 mb-4">
-                                <h6 class="accent-text mb-3">{{ type.code }} - {{ type.name }}</h6>
-                                <ul class="list-unstyled">
-                                    {% for major in type.recommended_majors %}
-                                    <li class="mb-2">
-                                        <span class="badge me-2">{{ "%.0f"|format(major.match * 100) }}%</span>
-                                        {{ major.name }}
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h3 class="mb-4 text-center accent-text">Top Recommended Majors</h3>
-        {% for major in recommended_majors %}
-        <div class="card shadow mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">{{ major.name }}</h5>
-                <span class="badge">{{ "%.1f"|format(major.match_score * 100) }}% Match</span>
+        {% if personality_type and recommendations %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Your Personality Type: {{ personality_type.code }}</h3>
             </div>
             <div class="card-body">
-                <p><strong>Description:</strong> {{ major.description }}</p>
-                <p><strong>Career Opportunities:</strong> {{ major.career_opportunities }}</p>
-                <p><strong>Required Skills:</strong> {{ major.required_skills }}</p>
-                
-                <div class="row mt-4">
+                <div class="row">
                     <div class="col-md-6">
-                        <h6 class="mb-3">Skills Match</h6>
-                        <div class="mb-2">
-                            <small>Analytical: {{ "%.1f"|format(major.analytical_match * 100) }}%</small>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (major.analytical_match * 100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <small>Creative: {{ "%.1f"|format(major.creative_match * 100) }}%</small>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (major.creative_match * 100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <small>Social: {{ "%.1f"|format(major.social_match * 100) }}%</small>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (major.social_match * 100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="mb-2">
-                            <small>Technical: {{ "%.1f"|format(major.technical_match * 100) }}%</small>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: {{ (major.technical_match * 100)|round }}%"></div>
-                            </div>
-                        </div>
+                        <h4>Dimension Scores:</h4>
+                        <ul>
+                            <li>Extraversion-Introversion: {{ "%.1f"|format(personality_type.scores.ei * 100) }}%</li>
+                            <li>Sensing-Intuition: {{ "%.1f"|format(personality_type.scores.sn * 100) }}%</li>
+                            <li>Thinking-Feeling: {{ "%.1f"|format(personality_type.scores.tf * 100) }}%</li>
+                            <li>Judging-Perceiving: {{ "%.1f"|format(personality_type.scores.jp * 100) }}%</li>
+                        </ul>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="mb-3">Personality Compatibility</h6>
-                        <div class="text-center">
-                            <div class="display-4 mb-2">{{ "%.0f"|format(major.personality_match * 100) }}%</div>
-                            <small>Match with {{ primary_type.code }} personality type</small>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="mb-3">Your Recommended Majors</h3>
+        {% for rec in recommendations %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ rec.major.name }}</h4>
+                    <span class="badge bg-primary">{{ rec.match_score }}% Match</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p><strong>Description:</strong> {{ rec.major.description }}</p>
+                <p><strong>Career Opportunities:</strong> {{ rec.major.career_opportunities }}</p>
+                <p><strong>Required Skills:</strong> {{ rec.major.required_skills }}</p>
+                
+                <h5>Match Breakdown:</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ rec.analytical_match }}%"
+                                 aria-valuenow="{{ rec.analytical_match }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ rec.analytical_match }}%
+                            </div>
                         </div>
+                        <small>Analytical</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ rec.creative_match }}%"
+                                 aria-valuenow="{{ rec.creative_match }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ rec.creative_match }}%
+                            </div>
+                        </div>
+                        <small>Creative</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ rec.social_match }}%"
+                                 aria-valuenow="{{ rec.social_match }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ rec.social_match }}%
+                            </div>
+                        </div>
+                        <small>Social</small>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ rec.technical_match }}%"
+                                 aria-valuenow="{{ rec.technical_match }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ rec.technical_match }}%
+                            </div>
+                        </div>
+                        <small>Technical</small>
                     </div>
                 </div>
             </div>
