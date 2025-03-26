@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Questionnaire{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4 text-center" style="color: var(--accent-color);">Major Preference Questionnaire</h2>
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Skills Assessment</h5>
+                <form id="questionnaireForm">
+                    <div class="mb-4">
+                        <label class="form-label">How much do you enjoy analytical problem solving?</label>
+                        <input type="range" class="form-range" min="1" max="10" id="analytical">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">How important is creativity in your work?</label>
+                        <input type="range" class="form-range" min="1" max="10" id="creative">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">How much do you enjoy working with people?</label>
+                        <input type="range" class="form-range" min="1" max="10" id="social">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">How comfortable are you with technical subjects?</label>
+                        <input type="range" class="form-range" min="1" max="10" id="technical">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">Personality Assessment</h5>
+                <form id="personalityForm">
+                    <!-- Extraversion (E) vs. Introversion (I) -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Energy Style</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Where do you prefer to focus your attention?</label>
+                            <select class="form-select" id="energy_focus">
+                                <option value="">Select an option...</option>
+                                <option value="E">External world of people and activities</option>
+                                <option value="I">Inner world of thoughts and reflections</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">How do you recharge?</label>
+                            <select class="form-select" id="energy_recharge">
+                                <option value="">Select an option...</option>
+                                <option value="E">Being around people energizes me</option>
+                                <option value="I">I need alone time to recharge</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sensing (S) vs. Intuition (N) -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Information Processing</h6>
+                        <div class="mb-3">
+                            <label class="form-label">How do you prefer to take in information?</label>
+                            <select class="form-select" id="info_gathering">
+                                <option value="">Select an option...</option>
+                                <option value="S">Focus on concrete facts and details</option>
+                                <option value="N">Focus on patterns and possibilities</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">When solving problems, do you prefer to:</label>
+                            <select class="form-select" id="problem_solving">
+                                <option value="">Select an option...</option>
+                                <option value="S">Use proven methods and practical solutions</option>
+                                <option value="N">Explore new approaches and innovative ideas</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Thinking (T) vs. Feeling (F) -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Decision Making</h6>
+                        <div class="mb-3">
+                            <label class="form-label">How do you prefer to make decisions?</label>
+                            <select class="form-select" id="decision_basis">
+                                <option value="">Select an option...</option>
+                                <option value="T">Based on logic and objective analysis</option>
+                                <option value="F">Based on values and impact on people</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">When evaluating choices, what matters more?</label>
+                            <select class="form-select" id="evaluation_priority">
+                                <option value="">Select an option...</option>
+                                <option value="T">Finding the most efficient and logical solution</option>
+                                <option value="F">Considering everyone's feelings and needs</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Judging (J) vs. Perceiving (P) -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">Lifestyle</h6>
+                        <div class="mb-3">
+                            <label class="form-label">How do you prefer to organize your life?</label>
+                            <select class="form-select" id="lifestyle_organization">
+                                <option value="">Select an option...</option>
+                                <option value="J">Structured and planned</option>
+                                <option value="P">Flexible and spontaneous</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">What's your work style?</label>
+                            <select class="form-select" id="work_style">
+                                <option value="">Select an option...</option>
+                                <option value="J">Complete one project before starting another</option>
+                                <option value="P">Work on multiple projects simultaneously</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg">Submit Questionnaire</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('questionnaireForm').addEventListener('input', function(e) {
+    // Store form data as it changes
+    localStorage.setItem('skillsData', JSON.stringify({
+        analytical: document.getElementById('analytical').value,
+        creative: document.getElementById('creative').value,
+        social: document.getElementById('social').value,
+        technical: document.getElementById('technical').value
+    }));
+});
+
+document.getElementById('personalityForm').addEventListener('input', function(e) {
+    // Store personality form data as it changes
+    const personalityData = {
+        energy: {
+            focus: document.getElementById('energy_focus').value,
+            recharge: document.getElementById('energy_recharge').value
+        },
+        information: {
+            gathering: document.getElementById('info_gathering').value,
+            problemSolving: document.getElementById('problem_solving').value
+        },
+        decisions: {
+            basis: document.getElementById('decision_basis').value,
+            priority: document.getElementById('evaluation_priority').value
+        },
+        lifestyle: {
+            organization: document.getElementById('lifestyle_organization').value,
+            workStyle: document.getElementById('work_style').value
+        }
+    };
+    localStorage.setItem('personalityData', JSON.stringify(personalityData));
+});
+
+document.getElementById('personalityForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get stored skills data
+    const skillsData = JSON.parse(localStorage.getItem('skillsData') || '{}');
+    
+    // Get stored personality data
+    const personalityData = JSON.parse(localStorage.getItem('personalityData') || '{}');
+    
+    // Calculate MBTI type
+    const mbti = {
+        E_I: (personalityData.energy.focus === 'E' && personalityData.energy.recharge === 'E') ? 'E' : 'I',
+        S_N: (personalityData.information.gathering === 'S' && personalityData.information.problemSolving === 'S') ? 'S' : 'N',
+        T_F: (personalityData.decisions.basis === 'T' && personalityData.decisions.priority === 'T') ? 'T' : 'F',
+        J_P: (personalityData.lifestyle.organization === 'J' && personalityData.lifestyle.workStyle === 'J') ? 'J' : 'P'
+    };
+    
+    const personalityType = mbti.E_I + mbti.S_N + mbti.T_F + mbti.J_P;
+    
+    const data = {
+        scores: {
+            analytical_score: parseInt(skillsData.analytical || 5),
+            creative_score: parseInt(skillsData.creative || 5),
+            social_score: parseInt(skillsData.social || 5),
+            technical_score: parseInt(skillsData.technical || 5)
+        },
+        personality: {
+            type: personalityType,
+            responses: personalityData
+        },
+        responses: {
+            skills: skillsData,
+            personality: personalityData
+        }
+    };
+
+    try {
+        const response = await fetch('/submit_questionnaire', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            // Clear stored data
+            localStorage.removeItem('skillsData');
+            localStorage.removeItem('personalityData');
+            window.location.href = '/recommendations';
+        } else {
+            alert('Error submitting questionnaire');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error submitting questionnaire');
+    }
+});
+
+// Load stored data on page load
+window.addEventListener('load', function() {
+    const skillsData = JSON.parse(localStorage.getItem('skillsData') || '{}');
+    const personalityData = JSON.parse(localStorage.getItem('personalityData') || '{}');
+    
+    // Restore skills values
+    if (skillsData) {
+        document.getElementById('analytical').value = skillsData.analytical || '';
+        document.getElementById('creative').value = skillsData.creative || '';
+        document.getElementById('social').value = skillsData.social || '';
+        document.getElementById('technical').value = skillsData.technical || '';
+    }
+    
+    // Restore personality values
+    if (personalityData.energy) {
+        document.getElementById('energy_focus').value = personalityData.energy.focus || '';
+        document.getElementById('energy_recharge').value = personalityData.energy.recharge || '';
+    }
+    if (personalityData.information) {
+        document.getElementById('info_gathering').value = personalityData.information.gathering || '';
+        document.getElementById('problem_solving').value = personalityData.information.problemSolving || '';
+    }
+    if (personalityData.decisions) {
+        document.getElementById('decision_basis').value = personalityData.decisions.basis || '';
+        document.getElementById('evaluation_priority').value = personalityData.decisions.priority || '';
+    }
+    if (personalityData.lifestyle) {
+        document.getElementById('lifestyle_organization').value = personalityData.lifestyle.organization || '';
+        document.getElementById('work_style').value = personalityData.lifestyle.workStyle || '';
+    }
+});
+</script>
+{% endblock %}
