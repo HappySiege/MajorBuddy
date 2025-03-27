@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, g
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, g, flash, send_from_directory
 from pathlib import Path
 import sqlite3
 import json
@@ -9,6 +9,7 @@ from functools import wraps
 from werkzeug.exceptions import HTTPException
 import logging
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configure logging
 logging.basicConfig(
@@ -23,10 +24,16 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_mapping(
-    DATABASE='majorbuddy.db',
+    DATABASE='recruitmentbuddy.db',
     SECRET_KEY='your-secret-key',  # Change this in production!
     MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max request size
 )
+
+# Add debug logging for static files
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    print(f"Serving static file: {filename}")
+    return send_from_directory('static', filename)
 
 def get_db():
     """Get database connection, storing it in g object"""
@@ -50,6 +57,14 @@ def init_db():
             with app.open_resource('schema.sql', mode='r') as f:
                 db.cursor().executescript(f.read())
             db.commit()
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def validate_questionnaire_input(data):
     """Validate questionnaire input data"""
@@ -257,6 +272,7 @@ def submit_questionnaire():
         return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
 
 @app.route('/recommendations')
+@login_required
 def recommendations():
     try:
         if 'scores' not in session:
@@ -366,6 +382,81 @@ def get_personality_types():
     except Exception as e:
         logger.error(f"Error fetching personality types: {str(e)}")
         raise
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = request.form.get('remember') == 'on'
+        
+        db = get_db()
+        error = None
+        user = db.execute(
+            'SELECT * FROM users WHERE email = ?', (email,)
+        ).fetchone()
+
+        if user is None:
+            error = 'Incorrect email.'
+        elif not check_password_hash(user['password'], password):
+            error = 'Incorrect password.'
+
+        if error is None:
+            session.clear()
+            session['user_id'] = user['id']
+            if remember:
+                # Session will last longer when remember is checked
+                session.permanent = True
+            return redirect(url_for('index'))
+
+        flash(error)
+
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        terms = request.form.get('terms') == 'on'
+        
+        db = get_db()
+        error = None
+
+        if not name or not email or not password:
+            error = 'All fields are required.'
+        elif not terms:
+            error = 'You must accept the Terms & Conditions.'
+        elif password != confirm_password:
+            error = 'Passwords do not match.'
+        elif db.execute(
+            'SELECT id FROM users WHERE email = ?', (email,)
+        ).fetchone() is not None:
+            error = f'Email {email} is already registered.'
+
+        if error is None:
+            db.execute(
+                'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+                (name, email, generate_password_hash(password))
+            )
+            db.commit()
+            return redirect(url_for('login'))
+
+        flash(error)
+
+    return render_template('signup.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/forgot-password')
+def forgot_password():
+    # TODO: Implement password reset functionality
+    return "Password reset functionality coming soon!"
 
 if __name__ == '__main__':
     init_db()

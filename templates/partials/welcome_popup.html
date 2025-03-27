@@ -1,0 +1,24 @@
+<!-- Welcome Popup -->
+<div class="modal fade" id="welcomePopup" tabindex="-1" aria-labelledby="welcomePopupLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-start">
+                    <!-- Mascot Image -->
+                    <div class="me-3">
+                        <img src="{{ url_for('static', filename='images/mascot.jpg', v=2) }}" alt="AI Mascot" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;">
+                    </div>
+                    <!-- Message Bubble -->
+                    <div class="bg-primary p-3 rounded-4 position-relative" style="flex: 1;">
+                        <!-- Speech bubble pointer -->
+                        <div class="position-absolute" style="left: -10px; top: 20px; width: 0; height: 0; border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-right: 10px solid var(--accent-color);"></div>
+                        <p class="mb-0 text-light">Welcome to Recruitment Buddy, your favorite AI that assists you in finding the majors that best fit you.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Let's Get Started!</button>
+            </div>
+        </div>
+    </div>
+</div>

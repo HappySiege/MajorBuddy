@@ -1,10 +1,20 @@
 -- Drop tables if they exist
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS majors;
 DROP TABLE IF EXISTS major_requirements;
 DROP TABLE IF EXISTS questionnaire_responses;
 DROP TABLE IF EXISTS major_recommendations;
 DROP TABLE IF EXISTS personality_types;
 DROP TABLE IF EXISTS major_personality_matches;
+
+-- Create users table
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 
 -- Create personality types table
 CREATE TABLE personality_types (

@@ -3,53 +3,35 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+<!-- Include Welcome Popup -->
+{% include 'partials/welcome_popup.html' %}
+
+<div class="row justify-content-center min-vh-100 align-items-center">
     <div class="col-md-8 text-center">
-        <h1 class="mb-4 accent-text">Welcome to MajorBuddy</h1>
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-4">Find Your Perfect College Major</h5>
-                <p class="card-text">Discover academic programs that align with your interests, skills, and career goals. Our intelligent matching system helps you:</p>
-                <div class="row mt-4">
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="accent-text">Explore Programs</h6>
-                                <p class="small">Browse through comprehensive descriptions of various majors, their requirements, and potential career paths.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="accent-text">Skills Assessment</h6>
-                                <p class="small">Evaluate your analytical, creative, social, and technical abilities to find programs that match your strengths.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="accent-text">Career Insights</h6>
-                                <p class="small">Learn about job opportunities, industry demand, and career trajectories for each major.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-body">
-                                <h6 class="accent-text">Smart Recommendations</h6>
-                                <p class="small">Get personalized major suggestions based on your unique combination of skills and preferences.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <a href="/questionnaire" class="btn btn-primary btn-lg">Start Exploring Majors</a>
-                    <p class="mt-3">Take our comprehensive questionnaire that analyzes your skills and personality traits to find majors that match your unique profile.</p>
-                </div>
-            </div>
+        <h1 class="display-2 mb-4 accent-text">Recruitment Buddy</h1>
+        <h2 class="h3 mb-5 text-light">Your Personal Guide to Choosing the Perfect Major</h2>
+        <div class="mb-5">
+            <a href="/questionnaire" class="btn btn-primary btn-lg px-5 py-3">Get Started</a>
         </div>
+        <p class="lead text-light-emphasis">
+            Let us help you find your ideal college major based on your interests and strengths. 
+            Through our intelligent matching system, we'll guide you to academic programs that align 
+            perfectly with your unique profile.
+        </p>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Show welcome popup when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only show popup if it hasn't been shown before
+        if (!localStorage.getItem('welcomeShown')) {
+            var welcomePopup = new bootstrap.Modal(document.getElementById('welcomePopup'));
+            welcomePopup.show();
+            localStorage.setItem('welcomeShown', 'true');
+        }
+    });
+</script>
 {% endblock %}

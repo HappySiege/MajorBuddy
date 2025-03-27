@@ -1,4 +1,4 @@
-# MajorBuddy - Degree Program Recommender
+# RecruitmentBuddy - Degree Program Recommender
 
 A web-based application that helps students find suitable degree programs based on their personality traits and academic interests.
 
@@ -18,7 +18,7 @@ A web-based application that helps students find suitable degree programs based 
 ## Project Structure
 
 ```
-MajorBuddy/
+RecruitmentBuddy/
 ├── app.py              # Main Flask application
 ├── schema.sql          # Database schema
 ├── populate_db.py      # Sample data population script
@@ -41,7 +41,7 @@ MajorBuddy/
 1. Clone the repository:
 ```bash
 git clone [repository-url]
-cd MajorBuddy
+cd RecruitmentBuddy
 ```
 
 2. Create a virtual environment and activate it:

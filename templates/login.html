@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center min-vh-100 align-items-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4 accent-text">Welcome Back</h2>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-4">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-4 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">Remember me</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                    </div>
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Don't have an account? <a href="{{ url_for('signup') }}" class="accent-text text-decoration-none">Sign Up</a></p>
+                        <a href="{{ url_for('forgot_password') }}" class="accent-text text-decoration-none">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

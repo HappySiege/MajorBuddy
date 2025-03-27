@@ -78,7 +78,7 @@ def test_index_page(client):
     """Test the index page loads correctly"""
     response = client.get('/')
     assert response.status_code == 200
-    assert b'Welcome to MajorBuddy' in response.data
+    assert b'Welcome to RecruitmentBuddy' in response.data
 
 def test_questionnaire_page(client):
     """Test the questionnaire page loads correctly"""
