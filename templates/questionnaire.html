@@ -31,7 +31,8 @@
                         <!-- Slider -->
                         <div class="px-4">
                             <input type="range" class="form-range custom-range" min="1" max="10" step="1" 
-                                   id="{{ question.field }}" name="{{ question.field }}">
+                                   id="{{ question.field }}" name="{{ question.field }}" data-dimension="{{ question.field }}"
+                                   value="5">
                             
                             <!-- Slider Labels -->
                             <div class="d-flex justify-content-between mt-2">
@@ -41,7 +42,10 @@
                             
                             <!-- Selected Value -->
                             <div class="text-center mt-3">
-                                <span class="badge bg-primary px-3 py-2" id="valueDisplay">5</span>
+                                <div class="progress" style="height: 2rem;">
+                                    <div class="progress-bar" role="progressbar" style="width: 50%;" 
+                                         aria-valuenow="5" aria-valuemin="1" aria-valuemax="10">5</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -53,9 +57,11 @@
                         {% else %}
                             <a href="{{ url_for('index') }}" class="btn btn-outline-primary px-4">Exit</a>
                         {% endif %}
-                        <button type="button" class="btn btn-primary px-4" onclick="nextQuestion()">
-                            {% if step == total_steps %}Submit{% else %}Next{% endif %}
-                        </button>
+                        {% if step == total_steps %}
+                            <button type="button" class="btn btn-primary px-4" onclick="submitQuestionnaire()">Submit</button>
+                        {% else %}
+                            <button type="button" class="btn btn-primary px-4" onclick="nextQuestion()">Next</button>
+                        {% endif %}
                     </div>
 
                     <!-- Mascot Encouragement (moved inside card) -->
@@ -91,37 +97,123 @@
 
 {% block scripts %}
 <script>
-    // Update the value display when slider changes
-    document.getElementById('{{ question.field }}').addEventListener('input', function(e) {
-        document.getElementById('valueDisplay').textContent = e.target.value;
-    });
+    function calculateScores() {
+        // Get all range inputs
+        const ranges = document.querySelectorAll('input[type="range"]');
+        const scores = {
+            analytical: 0,
+            creative: 0,
+            social: 0,
+            practical: 0
+        };
+        
+        // Get current question's score
+        const currentRange = document.querySelector('input[type="range"]');
+        const dimension = currentRange.getAttribute('data-dimension');
+        const value = parseFloat(currentRange.value);
+        
+        // Store score in session storage
+        sessionStorage.setItem(dimension, value);
+        
+        // Get all stored scores
+        Object.keys(scores).forEach(key => {
+            scores[key] = parseFloat(sessionStorage.getItem(key)) || 0;
+        });
+        
+        console.log('Calculated scores:', scores);
+        return scores;
+    }
 
-    // Handle next button click
     function nextQuestion() {
-        const value = document.getElementById('{{ question.field }}').value;
-        // Store the value and proceed to next question
-        fetch('/questionnaire/next', {
+        const currentStep = {{ step }};
+        const totalSteps = {{ total_steps }};
+        
+        // Store current score
+        calculateScores();
+        
+        if (currentStep === totalSteps) {
+            submitQuestionnaire();
+        } else {
+            window.location.href = "{{ url_for('questionnaire', step=step+1) }}";
+        }
+    }
+
+    function previousQuestion() {
+        window.location.href = "{{ url_for('questionnaire', step=step-1) }}";
+    }
+
+    function submitQuestionnaire() {
+        const scores = calculateScores();
+        console.log('Submitting scores:', scores);
+        
+        fetch('/submit_questionnaire', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                step: {{ step }},
-                {{ question.field }}: parseInt(value)
-            })
+            body: JSON.stringify(scores)
         })
         .then(response => response.json())
         .then(data => {
-            if (data.redirect) {
-                window.location.href = data.redirect;
+            console.log('Response:', data);
+            if (data.status === 'success') {
+                // Show success message
+                showMessage('success', data.message || 'Questionnaire submitted successfully!');
+                // Clear session storage
+                sessionStorage.clear();
+                // Redirect to profile page after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
+            } else {
+                showMessage('error', data.message || 'Error submitting questionnaire');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('error', 'An error occurred while submitting the questionnaire');
+        });
     }
 
-    // Handle back button click
-    function previousQuestion() {
-        window.location.href = "{{ url_for('questionnaire', step=step-1) }}";
+    function showMessage(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.style.zIndex = '1050';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove the alert after 3 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
     }
+
+    // Update progress bar as user changes values
+    document.querySelectorAll('input[type="range"]').forEach(range => {
+        range.addEventListener('input', function() {
+            const value = this.value;
+            const progressBar = this.parentElement.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${(value - 1) * 11.11}%`;  // Convert 1-10 to 0-100%
+                progressBar.textContent = value;
+                progressBar.setAttribute('aria-valuenow', value);
+            }
+        });
+    });
+
+    // Initialize progress bar with stored value if it exists
+    window.addEventListener('load', function() {
+        const range = document.querySelector('input[type="range"]');
+        const dimension = range.getAttribute('data-dimension');
+        const storedValue = sessionStorage.getItem(dimension);
+        if (storedValue) {
+            range.value = storedValue;
+            const event = new Event('input');
+            range.dispatchEvent(event);
+        }
+    });
 </script>
 {% endblock %}

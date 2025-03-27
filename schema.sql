@@ -99,13 +99,15 @@ CREATE TABLE major_personality_matches (
 -- Create table for storing questionnaire responses
 CREATE TABLE questionnaire_responses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     analytical_score FLOAT,     -- Score for analytical dimension (1-5)
     creative_score FLOAT,       -- Score for creative dimension (1-5)
     social_score FLOAT,         -- Score for social dimension (1-5)
-    technical_score FLOAT,      -- Score for technical dimension (1-5)
+    practical_score FLOAT,      -- Score for practical dimension (1-5)
     personality_type_id INTEGER, -- Reference to determined personality type
     raw_responses TEXT,         -- JSON of all question responses
+    FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (personality_type_id) REFERENCES personality_types(id)
 );
 

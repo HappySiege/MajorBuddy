@@ -75,57 +75,41 @@ def login_required(f):
 
 def validate_questionnaire_input(data):
     """Validate questionnaire input data"""
-    if 'scores' not in data:
-        raise ValueError("Missing 'scores' field in questionnaire data")
-        
-    required_fields = ['analytical_score', 'creative_score', 'social_score', 'technical_score']
-    scores = data['scores']
-    
-    if not all(field in scores for field in required_fields):
-        raise ValueError("Missing required fields in scores data")
-    
-    for field in required_fields:
-        score = scores[field]
-        if not isinstance(score, (int, float)) or score < 0 or score > 10:
-            raise ValueError(f"Invalid score for {field}. Must be number between 0 and 10")
-
-    return True
+    try:
+        required_fields = ['analytical', 'creative', 'social', 'practical']
+        for field in required_fields:
+            if field not in data:
+                logger.error(f"Missing required field: {field}")
+                return False
+            value = float(data[field])
+            if value < 1 or value > 10:
+                logger.error(f"Invalid value for {field}: {value}")
+                return False
+        return True
+    except (TypeError, ValueError) as e:
+        logger.error(f"Error validating questionnaire input: {str(e)}")
+        logger.error(f"Received data: {data}")
+        return False
 
 def get_personality_type(scores):
-    """Calculate personality type based on questionnaire scores."""
+    """Calculate personality type based on scores"""
     try:
-        # Simple mapping of scores to personality dimensions
-        # High analytical/technical -> Thinking (T), low -> Feeling (F)
-        # High creative -> Intuitive (N), low -> Sensing (S)
-        # High social -> Extravert (E), low -> Introvert (I)
-        # High technical/creative -> Perceiving (P), low -> Judging (J)
+        # Simple mapping based on highest score
+        max_score = max(scores.items(), key=lambda x: x[1])
         
-        # Calculate each dimension
-        ei_score = scores['social_score'] / 10.0
-        sn_score = scores['creative_score'] / 10.0
-        tf_score = (scores['analytical_score'] + scores['technical_score']) / 20.0
-        jp_score = (scores['technical_score'] + scores['creative_score']) / 20.0
-        
-        # Determine type code
-        type_code = ''
-        type_code += 'E' if ei_score >= 0.5 else 'I'
-        type_code += 'N' if sn_score >= 0.5 else 'S'
-        type_code += 'T' if tf_score >= 0.5 else 'F'
-        type_code += 'P' if jp_score >= 0.5 else 'J'
-        
-        # Calculate dimension scores
-        dimension_scores = {
-            'ei': ei_score,
-            'sn': sn_score,
-            'tf': tf_score,
-            'jp': jp_score
+        # Map dimension to personality type
+        type_mapping = {
+            'analytical': 'INTJ',  # Architect
+            'creative': 'ENFP',    # Innovator
+            'social': 'ESFJ',      # Counselor
+            'practical': 'ISTJ'    # Craftsman
         }
         
-        # Return both the type code and dimension scores
-        return {'code': type_code, 'scores': dimension_scores}, dimension_scores
+        return type_mapping[max_score[0]]
     except Exception as e:
-        logger.error(f"Error in personality type calculation: {str(e)}")
-        raise
+        logger.error(f"Error calculating personality type: {str(e)}")
+        logger.error(f"Scores: {scores}")
+        return 'INTJ'  # Default to INTJ if there's an error
 
 def get_personality_type_id(type_code):
     """Get or create a personality type record."""
@@ -214,18 +198,21 @@ def calculate_major_matches(scores, personality_type_id=None):
 def index():
     return render_template('index.html')
 
-@app.route('/questionnaire')
+@app.route('/questionnaire', methods=['GET'])
 @login_required
 def questionnaire():
     step = request.args.get('step', 1, type=int)
+    total_steps = 4  # Total number of questions
+    
+    # Define questions for each step
     questions = {
         1: {
-            'text': 'How much do you enjoy analytical thinking and problem-solving?',
+            'text': 'How much do you enjoy solving complex problems and analyzing data?',
             'field': 'analytical',
             'progress': 25
         },
         2: {
-            'text': 'How much do you enjoy creative and artistic activities?',
+            'text': 'How much do you enjoy expressing yourself creatively and thinking outside the box?',
             'field': 'creative',
             'progress': 50
         },
@@ -235,19 +222,20 @@ def questionnaire():
             'progress': 75
         },
         4: {
-            'text': 'How comfortable are you with technical and hands-on work?',
-            'field': 'technical',
+            'text': 'How much do you enjoy hands-on work and practical problem-solving?',
+            'field': 'practical',
             'progress': 100
         }
     }
     
-    if step not in questions:
-        return redirect(url_for('questionnaire'))
+    # Validate step number
+    if step < 1 or step > total_steps:
+        return redirect(url_for('questionnaire', step=1))
     
     return render_template('questionnaire.html', 
-                         question=questions[step],
                          step=step,
-                         total_steps=len(questions))
+                         total_steps=total_steps,
+                         question=questions[step])
 
 # Store questionnaire responses in session
 @app.route('/questionnaire/next', methods=['POST'])
@@ -282,61 +270,97 @@ def questionnaire_next():
 def submit_questionnaire():
     try:
         data = request.get_json()
-        validate_questionnaire_input(data)
+        logger.info(f"Received questionnaire data: {data}")
         
-        # Get or create personality type
-        primary_type, _ = get_personality_type(data['scores'])
-        personality_type_id = get_personality_type_id(primary_type['code'])
+        # Validate input data
+        if not validate_questionnaire_input(data):
+            logger.error("Invalid questionnaire data")
+            return jsonify({'status': 'error', 'message': 'Invalid input data'}), 400
         
-        # Store questionnaire response
+        # Calculate personality type
+        personality_type = get_personality_type(data)
+        logger.info(f"Calculated personality type: {personality_type}")
+        
+        # Get or create personality type record
         db = get_db()
         cursor = db.cursor()
         
+        # Ensure personality type exists
+        cursor.execute('SELECT id FROM personality_types WHERE code = ?', (personality_type,))
+        type_record = cursor.fetchone()
+        if not type_record:
+            cursor.execute('''
+                INSERT INTO personality_types (code, name, description)
+                VALUES (?, ?, ?)
+            ''', (personality_type, f"{personality_type} Type", "A detailed description will be added."))
+            db.commit()
+            personality_type_id = cursor.lastrowid
+        else:
+            personality_type_id = type_record['id']
+        
+        logger.info(f"Using personality type ID: {personality_type_id}")
+        
+        # Save questionnaire response
         cursor.execute('''
             INSERT INTO questionnaire_responses 
-            (analytical_score, creative_score, social_score, technical_score, 
-             personality_type_id, raw_responses)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (user_id, analytical_score, creative_score, social_score, practical_score, 
+             personality_type_id, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ''', (
-            data['scores']['analytical_score'],
-            data['scores']['creative_score'],
-            data['scores']['social_score'],
-            data['scores']['technical_score'],
-            personality_type_id,
-            json.dumps(data.get('responses', {}))  # Make responses optional
+            session['user_id'],
+            data['analytical'],
+            data['creative'],
+            data['social'],
+            data['practical'],
+            personality_type_id
         ))
+        
         response_id = cursor.lastrowid
+        logger.info(f"Created questionnaire response with ID: {response_id}")
         
-        # Calculate and store major recommendations
-        matches = calculate_major_matches(data['scores'], personality_type_id)
+        # Calculate and save major recommendations
+        scores = {
+            'analytical': data['analytical'] / 10.0,  # Convert to 0-1 scale
+            'creative': data['creative'] / 10.0,
+            'social': data['social'] / 10.0,
+            'practical': data['practical'] / 10.0
+        }
         
-        for match in matches:
+        # Get all majors
+        cursor.execute('SELECT * FROM majors')
+        majors = cursor.fetchall()
+        
+        # Calculate match scores
+        for major in majors:
+            match_score = (
+                scores['analytical'] * major['analytical_weight'] +
+                scores['creative'] * major['creative_weight'] +
+                scores['social'] * major['social_weight'] +
+                scores['practical'] * major['technical_weight']
+            ) / 4.0  # Average of all dimensions
+            
             cursor.execute('''
-                INSERT INTO major_recommendations
-                (response_id, major_id, match_score, analytical_match, 
-                 creative_match, social_match, technical_match,
-                 personality_match)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                response_id,
-                match['major_id'],
-                match['match_score'],
-                match['analytical_match'],
-                match['creative_match'],
-                match['social_match'],
-                match['technical_match'],
-                match.get('personality_match', 0.5)  # Default to neutral if not calculated
-            ))
+                INSERT INTO major_recommendations 
+                (response_id, major_id, match_score)
+                VALUES (?, ?, ?)
+            ''', (response_id, major['id'], match_score * 100))  # Convert to percentage
         
         db.commit()
-        session['scores'] = data['scores']  # Store scores in session
-        return jsonify({'status': 'success', 'response_id': response_id})
-    except ValueError as e:
-        logger.error(f"Error in submitting questionnaire: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        logger.info("Successfully saved major recommendations")
+        
+        # Return success with redirect to profile page
+        return jsonify({
+            'status': 'success',
+            'message': 'Questionnaire submitted successfully!',
+            'redirect': url_for('profile')
+        })
+        
     except Exception as e:
-        logger.error(f"Error in submitting questionnaire: {str(e)}")
-        return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+        logger.error(f"Error submitting questionnaire: {str(e)}")
+        logger.error("Traceback:", exc_info=True)
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/recommendations')
 @login_required
@@ -590,6 +614,90 @@ def logout():
 def forgot_password():
     # TODO: Implement password reset functionality
     return "Password reset functionality coming soon!"
+
+@app.route('/profile')
+@login_required
+def profile():
+    # Get user data
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],))
+    user = cursor.fetchone()
+
+    # Get user's questionnaire responses
+    cursor.execute('''
+        SELECT q.*, p.code as personality_type, p.name as personality_name, p.description as personality_description
+        FROM questionnaire_responses q
+        LEFT JOIN personality_types p ON q.personality_type_id = p.id
+        WHERE q.user_id = ?
+        ORDER BY q.timestamp DESC
+        LIMIT 1
+    ''', (session['user_id'],))
+    latest_response = cursor.fetchone()
+
+    # Get recommended majors if they exist
+    recommended_majors = []
+    if latest_response:
+        cursor.execute('''
+            SELECT m.*, mr.match_score
+            FROM major_recommendations mr
+            JOIN majors m ON mr.major_id = m.id
+            WHERE mr.response_id = ?
+            ORDER BY mr.match_score DESC
+            LIMIT 5
+        ''', (latest_response['id'],))
+        recommended_majors = cursor.fetchall()
+
+    return render_template('profile.html', 
+                         user=user, 
+                         latest_response=latest_response,
+                         recommended_majors=recommended_majors)
+
+@app.route('/profile/update', methods=['POST'])
+@login_required
+def update_profile():
+    try:
+        first_name = request.form.get('first_name')
+        last_name = request.form.get('last_name')
+        email = request.form.get('email')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Verify current password if provided
+        if current_password:
+            cursor.execute('SELECT password FROM users WHERE id = ?', (session['user_id'],))
+            stored_password = cursor.fetchone()['password']
+            if not check_password_hash(stored_password, current_password):
+                flash('Current password is incorrect', 'error')
+                return redirect(url_for('profile'))
+        
+        # Update user information
+        if new_password:
+            cursor.execute('''
+                UPDATE users 
+                SET first_name = ?, last_name = ?, email = ?, password = ?
+                WHERE id = ?
+            ''', (first_name, last_name, email, 
+                 generate_password_hash(new_password), session['user_id']))
+        else:
+            cursor.execute('''
+                UPDATE users 
+                SET first_name = ?, last_name = ?, email = ?
+                WHERE id = ?
+            ''', (first_name, last_name, email, session['user_id']))
+        
+        db.commit()
+        flash('Profile updated successfully', 'success')
+        
+    except Exception as e:
+        db.rollback()
+        flash('Error updating profile', 'error')
+        print(f"Error updating profile: {str(e)}")
+    
+    return redirect(url_for('profile'))
 
 # Add session debugging
 @app.before_request

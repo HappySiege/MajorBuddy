@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- User Profile Section -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Profile Information</h4>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('update_profile') }}" method="post">
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">First Name</label>
+                        <input type="text" class="form-control bg-dark text-light" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Last Name</label>
+                        <input type="text" class="form-control bg-dark text-light" id="last_name" name="last_name" value="{{ user.last_name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control bg-dark text-light" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    <hr class="my-4">
+                    <h5>Change Password</h5>
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control bg-dark text-light" id="current_password" name="current_password">
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control bg-dark text-light" id="new_password" name="new_password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questionnaire Results Section -->
+    <div class="col-md-6">
+        {% if latest_response %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Latest Assessment Results</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">Your Personality Type: <span class="accent-text">{{ latest_response.personality_type }} - {{ latest_response.personality_name }}</span></h5>
+                {% if latest_response.personality_description %}
+                <p class="mb-4">{{ latest_response.personality_description }}</p>
+                {% endif %}
+                <div class="mb-4">
+                    <h6>Your Scores:</h6>
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <label class="d-block mb-1">Analytical</label>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ latest_response.analytical_score }}%" aria-valuenow="{{ latest_response.analytical_score }}" aria-valuemin="0" aria-valuemax="100">{{ "%.0f"|format(latest_response.analytical_score) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label class="d-block mb-1">Creative</label>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ latest_response.creative_score }}%" aria-valuenow="{{ latest_response.creative_score }}" aria-valuemin="0" aria-valuemax="100">{{ "%.0f"|format(latest_response.creative_score) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label class="d-block mb-1">Social</label>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ latest_response.social_score }}%" aria-valuenow="{{ latest_response.social_score }}" aria-valuemin="0" aria-valuemax="100">{{ "%.0f"|format(latest_response.social_score) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label class="d-block mb-1">Practical</label>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: {{ latest_response.practical_score }}%" aria-valuenow="{{ latest_response.practical_score }}" aria-valuemin="0" aria-valuemax="100">{{ "%.0f"|format(latest_response.practical_score) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ url_for('questionnaire') }}" class="btn btn-primary">Take Assessment Again</a>
+            </div>
+        </div>
+
+        <!-- Top Recommended Majors -->
+        {% if recommended_majors %}
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Top Recommended Majors</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5>Top Recommended Majors:</h5>
+                    <div class="list-group">
+                        {% for major in recommended_majors %}
+                        <div class="list-group-item bg-dark border-primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1 text-primary">{{ major.name }}</h6>
+                                <span class="badge bg-primary">{{ "%.1f"|format(major.match_score) }}% Match</span>
+                            </div>
+                            <p class="mb-1 small text-light-emphasis">{{ major.description }}</p>
+                            <small class="text-light-emphasis">
+                                <strong>Key Skills:</strong> {{ major.skills }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('recommendations') }}" class="btn btn-primary">View All Recommendations</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="mb-3">No Assessment Results Yet</h5>
+                <p class="mb-4">Take our personality assessment to discover your ideal career path!</p>
+                <a href="{{ url_for('questionnaire') }}" class="btn btn-primary">Start Assessment</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
