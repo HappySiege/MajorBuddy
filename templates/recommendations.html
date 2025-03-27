@@ -1,111 +1,246 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <h2 class="mb-4 text-center accent-text">Your Major Recommendations</h2>
-        
-        {% if error %}
-        <div class="alert alert-warning">{{ error }}</div>
-        {% endif %}
+{% block title %}Your Major Recommendations{% endblock %}
 
-        {% if personality_type and recommendations %}
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>Your Personality Type: {{ personality_type.code }}</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4>Dimension Scores:</h4>
-                        <ul>
-                            <li>Extraversion-Introversion: {{ "%.1f"|format(personality_type.scores.ei * 100) }}%</li>
-                            <li>Sensing-Intuition: {{ "%.1f"|format(personality_type.scores.sn * 100) }}%</li>
-                            <li>Thinking-Feeling: {{ "%.1f"|format(personality_type.scores.tf * 100) }}%</li>
-                            <li>Judging-Perceiving: {{ "%.1f"|format(personality_type.scores.jp * 100) }}%</li>
+{% block content %}
+<div class="container py-5">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <h1 class="display-4 accent-text mb-3">Your Major Recommendations</h1>
+        <p class="lead text-light-emphasis">Based on your responses, here are your best matches</p>
+    </div>
+
+    <!-- Recommendations Grid -->
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
+        {% for major in majors %}
+        <div class="col">
+            <div class="card h-100 bg-dark border-primary hover-elevation">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h3 class="card-title h4 accent-text">{{ major.name }}</h3>
+                        <span class="badge bg-primary px-3 py-2">{{ major.match_percentage }}% Match</span>
+                    </div>
+                    
+                    <!-- Radar Chart -->
+                    <div class="chart-container mb-4" style="position: relative; height: 200px;">
+                        <canvas id="chart{{ loop.index }}" width="200" height="200"></canvas>
+                    </div>
+
+                    <p class="card-text text-light-emphasis mb-4">{{ major.description }}</p>
+                    
+                    <!-- Career Opportunities -->
+                    <div class="mb-4">
+                        <h4 class="h6 accent-text mb-2">Career Opportunities</h4>
+                        <ul class="list-unstyled text-light-emphasis">
+                            {% for career in major.careers[:3] %}
+                            <li><i class="bi bi-briefcase me-2"></i>{{ career }}</li>
+                            {% endfor %}
                         </ul>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <h3 class="mb-3">Your Recommended Majors</h3>
-        {% for rec in recommendations %}
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">{{ rec.major.name }}</h4>
-                    <span class="badge bg-primary">{{ rec.match_score }}% Match</span>
-                </div>
-            </div>
-            <div class="card-body">
-                <p><strong>Description:</strong> {{ rec.major.description }}</p>
-                <p><strong>Career Opportunities:</strong> {{ rec.major.career_opportunities }}</p>
-                <p><strong>Required Skills:</strong> {{ rec.major.required_skills }}</p>
-                
-                <h5>Match Breakdown:</h5>
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: {{ rec.analytical_match }}%"
-                                 aria-valuenow="{{ rec.analytical_match }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                {{ rec.analytical_match }}%
-                            </div>
-                        </div>
-                        <small>Analytical</small>
+                    <!-- Required Skills -->
+                    <div class="mb-4">
+                        <h4 class="h6 accent-text mb-2">Key Skills</h4>
+                        <ul class="list-unstyled text-light-emphasis">
+                            {% for skill in major.skills[:3] %}
+                            <li><i class="bi bi-check2-circle me-2"></i>{{ skill }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
-                    <div class="col-md-3">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: {{ rec.creative_match }}%"
-                                 aria-valuenow="{{ rec.creative_match }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                {{ rec.creative_match }}%
-                            </div>
-                        </div>
-                        <small>Creative</small>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: {{ rec.social_match }}%"
-                                 aria-valuenow="{{ rec.social_match }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                {{ rec.social_match }}%
-                            </div>
-                        </div>
-                        <small>Social</small>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="progress mb-2">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: {{ rec.technical_match }}%"
-                                 aria-valuenow="{{ rec.technical_match }}" 
-                                 aria-valuemin="0" 
-                                 aria-valuemax="100">
-                                {{ rec.technical_match }}%
-                            </div>
-                        </div>
-                        <small>Technical</small>
-                    </div>
+
+                    <button class="btn btn-primary w-100" 
+                            onclick="showMajorDetails('{{ major.name }}', {{ major|tojson }})">
+                        Learn More
+                    </button>
                 </div>
             </div>
         </div>
         {% endfor %}
-        {% endif %}
+    </div>
 
-        <div class="text-center mt-4">
-            <a href="/questionnaire" class="btn btn-primary">Take Questionnaire Again</a>
-        </div>
+    <!-- Action Buttons -->
+    <div class="text-center">
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-outline-primary btn-lg px-4 me-3">
+            Retake Quiz
+        </a>
+        <button class="btn btn-primary btn-lg px-4" onclick="shareResults()">
+            Share Results
+        </button>
     </div>
 </div>
+
+<!-- Include Major Details Modal -->
+{% include 'partials/major_details_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Create radar charts for each major
+    {% for major in majors %}
+    createRadarChart('chart{{ loop.index }}', {
+        labels: ['Analytical', 'Creative', 'Social', 'Technical'],
+        userScores: [
+            {{ user_scores.analytical }},
+            {{ user_scores.creative }},
+            {{ user_scores.social }},
+            {{ user_scores.technical }}
+        ],
+        majorScores: [
+            {{ major.weights.analytical * 10 }},
+            {{ major.weights.creative * 10 }},
+            {{ major.weights.social * 10 }},
+            {{ major.weights.technical * 10 }}
+        ]
+    });
+    {% endfor %}
+});
+
+function createRadarChart(canvasId, data) {
+    new Chart(document.getElementById(canvasId).getContext('2d'), {
+        type: 'radar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Your Profile',
+                data: data.userScores,
+                fill: true,
+                backgroundColor: 'rgba(var(--accent-color-rgb), 0.2)',
+                borderColor: 'rgb(var(--accent-color-rgb))',
+                pointBackgroundColor: 'rgb(var(--accent-color-rgb))',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(var(--accent-color-rgb))'
+            }, {
+                label: 'Major Requirements',
+                data: data.majorScores,
+                fill: true,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                borderColor: '#ffffff',
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#ffffff'
+            }]
+        },
+        options: {
+            elements: {
+                line: { borderWidth: 2 }
+            },
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    pointLabels: { color: 'rgba(255, 255, 255, 0.7)' },
+                    ticks: {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        backdropColor: 'transparent'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: 'rgba(255, 255, 255, 0.7)' }
+                }
+            }
+        }
+    });
+}
+
+function showMajorDetails(majorName, majorData) {
+    const modal = new bootstrap.Modal(document.getElementById('majorDetailsModal'));
+    
+    // Update modal content
+    document.getElementById('majorDetailsModalLabel').textContent = majorName;
+    document.querySelector('#overview .description').textContent = majorData.description;
+    
+    // Update careers
+    const careersList = document.querySelector('#careers .careers-list');
+    careersList.innerHTML = majorData.careers.map(career => `
+        <div class="col">
+            <div class="card bg-dark border-primary h-100">
+                <div class="card-body">
+                    <h5 class="card-title h6 accent-text">${career}</h5>
+                    <p class="card-text text-light-emphasis">
+                        Career description and requirements will go here.
+                    </p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Update skills
+    const skillsList = document.querySelector('#skills .skills-list');
+    skillsList.innerHTML = majorData.skills.map(skill => `
+        <li class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-check2-circle text-primary me-2"></i>
+                <strong class="text-light">${skill}</strong>
+            </div>
+            <p class="text-light-emphasis ms-4 mb-0">
+                Detailed explanation of the skill and its importance.
+            </p>
+        </li>
+    `).join('');
+    
+    // Create skills radar chart
+    if (window.modalSkillsChart) {
+        window.modalSkillsChart.destroy();
+    }
+    window.modalSkillsChart = createRadarChart('modalSkillsChart', {
+        labels: ['Analytical', 'Creative', 'Social', 'Technical'],
+        userScores: [
+            {{ user_scores.analytical }},
+            {{ user_scores.creative }},
+            {{ user_scores.social }},
+            {{ user_scores.technical }}
+        ],
+        majorScores: [
+            majorData.weights.analytical * 10,
+            majorData.weights.creative * 10,
+            majorData.weights.social * 10,
+            majorData.weights.technical * 10
+        ]
+    });
+    
+    // Show the modal
+    modal.show();
+}
+
+function shareResults() {
+    // TODO: Implement sharing functionality
+    alert('Share functionality coming soon!');
+}
+</script>
+
+<style>
+.hover-elevation {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hover-elevation:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(var(--accent-color-rgb), 0.15);
+}
+.chart-container {
+    margin: 0 auto;
+}
+.nav-tabs {
+    border-bottom-color: var(--accent-color);
+}
+.nav-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+.nav-tabs .nav-link:hover {
+    color: var(--accent-color);
+    border-color: transparent;
+}
+.nav-tabs .nav-link.active {
+    color: var(--accent-color);
+    background-color: transparent;
+    border-bottom-color: var(--accent-color);
+}
+</style>
 {% endblock %}

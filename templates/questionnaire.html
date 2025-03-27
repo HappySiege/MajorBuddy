@@ -1,131 +1,88 @@
 {% extends "base.html" %}
 
-{% block title %}Questionnaire{% endblock %}
+{% block title %}Questionnaire - Step {{ step }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0" style="color: var(--accent-color);">Major Preference Questionnaire</h2>
-            <a href="{{ url_for('index') }}" class="btn btn-outline-danger">Exit</a>
-        </div>
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-4">Skills Assessment</h5>
-                <form id="questionnaireForm">
-                    <div class="mb-4">
-                        <label class="form-label">How much do you enjoy analytical problem solving?</label>
-                        <input type="range" class="form-range" min="1" max="10" id="analytical">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">How important is creativity in your work?</label>
-                        <input type="range" class="form-range" min="1" max="10" id="creative">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">How much do you enjoy working with people?</label>
-                        <input type="range" class="form-range" min="1" max="10" id="social">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">How comfortable are you with technical subjects?</label>
-                        <input type="range" class="form-range" min="1" max="10" id="technical">
-                    </div>
-                </form>
+<div class="container py-5">
+    <!-- Progress Bar -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="progress" style="height: 2rem;">
+                <div class="progress-bar bg-primary" role="progressbar" 
+                     style="width: {{ question.progress }}%;" 
+                     aria-valuenow="{{ question.progress }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                    Step {{ step }} of {{ total_steps }}
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-4">Personality Assessment</h5>
-                <form id="personalityForm">
-                    <!-- Extraversion (E) vs. Introversion (I) -->
-                    <div class="mb-4">
-                        <h6 class="mb-3">Energy Style</h6>
-                        <div class="mb-3">
-                            <label class="form-label">Where do you prefer to focus your attention?</label>
-                            <select class="form-select" id="energy_focus">
-                                <option value="">Select an option...</option>
-                                <option value="E">External world of people and activities</option>
-                                <option value="I">Inner world of thoughts and reflections</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">How do you recharge?</label>
-                            <select class="form-select" id="energy_recharge">
-                                <option value="">Select an option...</option>
-                                <option value="E">Being around people energizes me</option>
-                                <option value="I">I need alone time to recharge</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Sensing (S) vs. Intuition (N) -->
-                    <div class="mb-4">
-                        <h6 class="mb-3">Information Processing</h6>
-                        <div class="mb-3">
-                            <label class="form-label">How do you prefer to take in information?</label>
-                            <select class="form-select" id="info_gathering">
-                                <option value="">Select an option...</option>
-                                <option value="S">Focus on concrete facts and details</option>
-                                <option value="N">Focus on patterns and possibilities</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">When solving problems, do you prefer to:</label>
-                            <select class="form-select" id="problem_solving">
-                                <option value="">Select an option...</option>
-                                <option value="S">Use proven methods and practical solutions</option>
-                                <option value="N">Explore new approaches and innovative ideas</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Thinking (T) vs. Feeling (F) -->
-                    <div class="mb-4">
-                        <h6 class="mb-3">Decision Making</h6>
-                        <div class="mb-3">
-                            <label class="form-label">How do you prefer to make decisions?</label>
-                            <select class="form-select" id="decision_basis">
-                                <option value="">Select an option...</option>
-                                <option value="T">Based on logic and objective analysis</option>
-                                <option value="F">Based on values and impact on people</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">When evaluating choices, what matters more?</label>
-                            <select class="form-select" id="evaluation_priority">
-                                <option value="">Select an option...</option>
-                                <option value="T">Finding the most efficient and logical solution</option>
-                                <option value="F">Considering everyone's feelings and needs</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Judging (J) vs. Perceiving (P) -->
-                    <div class="mb-4">
-                        <h6 class="mb-3">Lifestyle</h6>
-                        <div class="mb-3">
-                            <label class="form-label">How do you prefer to organize your life?</label>
-                            <select class="form-select" id="lifestyle_organization">
-                                <option value="">Select an option...</option>
-                                <option value="J">Structured and planned</option>
-                                <option value="P">Flexible and spontaneous</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">What's your work style?</label>
-                            <select class="form-select" id="work_style">
-                                <option value="">Select an option...</option>
-                                <option value="J">Complete one project before starting another</option>
-                                <option value="P">Work on multiple projects simultaneously</option>
-                            </select>
-                        </div>
-                    </div>
-
+    <!-- Main Content -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card bg-dark border-primary">
+                <div class="card-body p-4">
+                    <!-- Question Section -->
                     <div class="text-center mb-5">
-                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg me-3">Cancel</a>
-                        <button type="button" class="btn btn-primary btn-lg" onclick="submitQuestionnaire()">Submit</button>
+                        <h2 class="h3 accent-text mb-4">{{ question.text }}</h2>
+                        
+                        <!-- Slider -->
+                        <div class="px-4">
+                            <input type="range" class="form-range custom-range" min="1" max="10" step="1" 
+                                   id="{{ question.field }}" name="{{ question.field }}">
+                            
+                            <!-- Slider Labels -->
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="text-light-emphasis">Not at all</span>
+                                <span class="text-light-emphasis">Very much</span>
+                            </div>
+                            
+                            <!-- Selected Value -->
+                            <div class="text-center mt-3">
+                                <span class="badge bg-primary px-3 py-2" id="valueDisplay">5</span>
+                            </div>
+                        </div>
                     </div>
-                </form>
+
+                    <!-- Navigation Buttons -->
+                    <div class="d-flex justify-content-between mt-5">
+                        {% if step > 1 %}
+                            <button type="button" class="btn btn-outline-primary px-4" onclick="previousQuestion()">Back</button>
+                        {% else %}
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-primary px-4">Exit</a>
+                        {% endif %}
+                        <button type="button" class="btn btn-primary px-4" onclick="nextQuestion()">
+                            {% if step == total_steps %}Submit{% else %}Next{% endif %}
+                        </button>
+                    </div>
+
+                    <!-- Mascot Encouragement (moved inside card) -->
+                    <div class="mt-5">
+                        <div class="d-flex align-items-start bg-dark rounded-4 p-3 border border-primary">
+                            <img src="{{ url_for('static', filename='images/mascot.jpg') }}" 
+                                 alt="RecruitmentBuddy Mascot" 
+                                 class="rounded-circle me-3"
+                                 style="width: 50px; height: 50px; object-fit: cover;">
+                            <div class="bg-primary p-3 rounded-4 position-relative">
+                                <div class="position-absolute" 
+                                     style="left: -10px; top: 10px; width: 0; height: 0; 
+                                            border-top: 10px solid transparent; 
+                                            border-bottom: 10px solid transparent; 
+                                            border-right: 10px solid var(--accent-color);">
+                                </div>
+                                <p class="mb-0 text-light">
+                                    {% if step == total_steps %}
+                                        Almost there! This is the last question.
+                                    {% else %}
+                                        Take your time! Your answers help me find the perfect major for you.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -134,126 +91,37 @@
 
 {% block scripts %}
 <script>
-document.getElementById('questionnaireForm').addEventListener('input', function(e) {
-    // Store form data as it changes
-    localStorage.setItem('skillsData', JSON.stringify({
-        analytical: document.getElementById('analytical').value,
-        creative: document.getElementById('creative').value,
-        social: document.getElementById('social').value,
-        technical: document.getElementById('technical').value
-    }));
-});
+    // Update the value display when slider changes
+    document.getElementById('{{ question.field }}').addEventListener('input', function(e) {
+        document.getElementById('valueDisplay').textContent = e.target.value;
+    });
 
-document.getElementById('personalityForm').addEventListener('input', function(e) {
-    // Store personality form data as it changes
-    const personalityData = {
-        energy: {
-            focus: document.getElementById('energy_focus').value,
-            recharge: document.getElementById('energy_recharge').value
-        },
-        information: {
-            gathering: document.getElementById('info_gathering').value,
-            problemSolving: document.getElementById('problem_solving').value
-        },
-        decisions: {
-            basis: document.getElementById('decision_basis').value,
-            priority: document.getElementById('evaluation_priority').value
-        },
-        lifestyle: {
-            organization: document.getElementById('lifestyle_organization').value,
-            workStyle: document.getElementById('work_style').value
-        }
-    };
-    localStorage.setItem('personalityData', JSON.stringify(personalityData));
-});
-
-function submitQuestionnaire() {
-    // Get stored skills data
-    const skillsData = JSON.parse(localStorage.getItem('skillsData') || '{}');
-    
-    // Get stored personality data
-    const personalityData = JSON.parse(localStorage.getItem('personalityData') || '{}');
-    
-    // Calculate MBTI type
-    const mbti = {
-        E_I: (personalityData.energy.focus === 'E' && personalityData.energy.recharge === 'E') ? 'E' : 'I',
-        S_N: (personalityData.information.gathering === 'S' && personalityData.information.problemSolving === 'S') ? 'S' : 'N',
-        T_F: (personalityData.decisions.basis === 'T' && personalityData.decisions.priority === 'T') ? 'T' : 'F',
-        J_P: (personalityData.lifestyle.organization === 'J' && personalityData.lifestyle.workStyle === 'J') ? 'J' : 'P'
-    };
-    
-    const personalityType = mbti.E_I + mbti.S_N + mbti.T_F + mbti.J_P;
-    
-    const data = {
-        scores: {
-            analytical_score: parseInt(skillsData.analytical || 5),
-            creative_score: parseInt(skillsData.creative || 5),
-            social_score: parseInt(skillsData.social || 5),
-            technical_score: parseInt(skillsData.technical || 5)
-        },
-        personality: {
-            type: personalityType,
-            responses: personalityData
-        },
-        responses: {
-            skills: skillsData,
-            personality: personalityData
-        }
-    };
-
-    try {
-        const response = await fetch('/submit_questionnaire', {
+    // Handle next button click
+    function nextQuestion() {
+        const value = document.getElementById('{{ question.field }}').value;
+        // Store the value and proceed to next question
+        fetch('/questionnaire/next', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
-        });
-        
-        if (response.ok) {
-            // Clear stored data
-            localStorage.removeItem('skillsData');
-            localStorage.removeItem('personalityData');
-            window.location.href = '/recommendations';
-        } else {
-            alert('Error submitting questionnaire');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error submitting questionnaire');
+            body: JSON.stringify({
+                step: {{ step }},
+                {{ question.field }}: parseInt(value)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
-}
 
-// Load stored data on page load
-window.addEventListener('load', function() {
-    const skillsData = JSON.parse(localStorage.getItem('skillsData') || '{}');
-    const personalityData = JSON.parse(localStorage.getItem('personalityData') || '{}');
-    
-    // Restore skills values
-    if (skillsData) {
-        document.getElementById('analytical').value = skillsData.analytical || '';
-        document.getElementById('creative').value = skillsData.creative || '';
-        document.getElementById('social').value = skillsData.social || '';
-        document.getElementById('technical').value = skillsData.technical || '';
+    // Handle back button click
+    function previousQuestion() {
+        window.location.href = "{{ url_for('questionnaire', step=step-1) }}";
     }
-    
-    // Restore personality values
-    if (personalityData.energy) {
-        document.getElementById('energy_focus').value = personalityData.energy.focus || '';
-        document.getElementById('energy_recharge').value = personalityData.energy.recharge || '';
-    }
-    if (personalityData.information) {
-        document.getElementById('info_gathering').value = personalityData.information.gathering || '';
-        document.getElementById('problem_solving').value = personalityData.information.problemSolving || '';
-    }
-    if (personalityData.decisions) {
-        document.getElementById('decision_basis').value = personalityData.decisions.basis || '';
-        document.getElementById('evaluation_priority').value = personalityData.decisions.priority || '';
-    }
-    if (personalityData.lifestyle) {
-        document.getElementById('lifestyle_organization').value = personalityData.lifestyle.organization || '';
-        document.getElementById('work_style').value = personalityData.lifestyle.workStyle || '';
-    }
-});
 </script>
 {% endblock %}

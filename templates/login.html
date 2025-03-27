@@ -3,34 +3,75 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center min-vh-100 align-items-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-lg">
-            <div class="card-body p-5">
-                <h2 class="text-center mb-4 accent-text">Welcome Back</h2>
-                <form method="POST" action="{{ url_for('login') }}">
-                    <div class="mb-4">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="mb-4 form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                        <label class="form-check-label" for="remember">Remember me</label>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">Login</button>
-                    </div>
-                    <div class="text-center mt-4">
-                        <p class="mb-0">Don't have an account? <a href="{{ url_for('signup') }}" class="accent-text text-decoration-none">Sign Up</a></p>
-                        <a href="{{ url_for('forgot_password') }}" class="accent-text text-decoration-none">Forgot Password?</a>
-                    </div>
-                </form>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row align-items-center w-100" style="max-width: 900px;">
+        <!-- Mascot Section -->
+        <div class="col-md-6 text-center mb-4 mb-md-0">
+            <img src="{{ url_for('static', filename='images/mascot.jpg') }}" alt="RecruitmentBuddy Mascot" 
+                 class="img-fluid rounded-circle mb-3" style="max-width: 200px;">
+            <h2 class="h3 accent-text">Welcome Back!</h2>
+            <p class="text-light-emphasis">Let's find your perfect major together.</p>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-primary">
+                <div class="card-body p-4">
+                    <h1 class="h3 mb-4 text-center accent-text">Login</h1>
+                    
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-light">Email</label>
+                            <input type="email" class="form-control bg-dark text-light border-primary" 
+                                   id="email" name="email" required>
+                        </div>
+                        
+                        <!-- Password Input -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label text-light">Password</label>
+                            <input type="password" class="form-control bg-dark text-light border-primary" 
+                                   id="password" name="password" required>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                        
+                        <!-- Debug Info -->
+                        <div class="mt-3 text-light-emphasis">
+                            <small>Debug: Form will submit to {{ url_for('login') }}</small>
+                        </div>
+                        
+                        <!-- Links -->
+                        <div class="mt-3 text-center">
+                            <p class="mb-0 text-light-emphasis">
+                                Don't have an account? 
+                                <a href="{{ url_for('signup') }}" class="text-primary">Sign up</a>
+                            </p>
+                            <p class="mt-2 mb-0">
+                                <a href="{{ url_for('forgot_password') }}" class="text-primary">Forgot Password?</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Debug JavaScript -->
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    console.log('Form submitted');
+    console.log('Email:', document.getElementById('email').value);
+    // Don't log the actual password in production
+    console.log('Password length:', document.getElementById('password').value.length);
+});
+</script>
 {% endblock %}

@@ -10,6 +10,7 @@ from werkzeug.exceptions import HTTPException
 import logging
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -23,11 +24,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config.from_mapping(
-    DATABASE='recruitmentbuddy.db',
-    SECRET_KEY='your-secret-key',  # Change this in production!
-    MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max request size
-)
+app.config['SECRET_KEY'] = 'dev'  # Change this to a secure key in production
+app.config['DATABASE'] = 'recruitmentbuddy.db'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
 
 # Add debug logging for static files
 @app.route('/static/<path:filename>')
@@ -38,8 +37,15 @@ def serve_static(filename):
 def get_db():
     """Get database connection, storing it in g object"""
     if 'db' not in g:
-        g.db = sqlite3.connect(app.config['DATABASE'])
-        g.db.row_factory = sqlite3.Row
+        try:
+            db_path = Path(app.config['DATABASE']).resolve()
+            print(f"Connecting to database at: {db_path}")
+            g.db = sqlite3.connect(str(db_path))
+            g.db.row_factory = sqlite3.Row
+            print("Database connection successful")
+        except Exception as e:
+            print(f"Database connection error: {e}")
+            raise
     return g.db
 
 @app.teardown_appcontext
@@ -62,6 +68,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
+            flash('Please log in to access this page.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -208,10 +215,70 @@ def index():
     return render_template('index.html')
 
 @app.route('/questionnaire')
+@login_required
 def questionnaire():
-    return render_template('questionnaire.html')
+    step = request.args.get('step', 1, type=int)
+    questions = {
+        1: {
+            'text': 'How much do you enjoy analytical thinking and problem-solving?',
+            'field': 'analytical',
+            'progress': 25
+        },
+        2: {
+            'text': 'How much do you enjoy creative and artistic activities?',
+            'field': 'creative',
+            'progress': 50
+        },
+        3: {
+            'text': 'How much do you enjoy working with and helping others?',
+            'field': 'social',
+            'progress': 75
+        },
+        4: {
+            'text': 'How comfortable are you with technical and hands-on work?',
+            'field': 'technical',
+            'progress': 100
+        }
+    }
+    
+    if step not in questions:
+        return redirect(url_for('questionnaire'))
+    
+    return render_template('questionnaire.html', 
+                         question=questions[step],
+                         step=step,
+                         total_steps=len(questions))
+
+# Store questionnaire responses in session
+@app.route('/questionnaire/next', methods=['POST'])
+@login_required
+def questionnaire_next():
+    if not session.get('user_id'):
+        return jsonify({'redirect': url_for('login')})
+    
+    data = request.get_json()
+    step = data.get('step')
+    
+    if not session.get('questionnaire_responses'):
+        session['questionnaire_responses'] = {}
+    
+    # Store the response for the current step
+    if step == 1:
+        session['questionnaire_responses']['analytical'] = data.get('analytical')
+        return jsonify({'redirect': url_for('questionnaire', step=2)})
+    elif step == 2:
+        session['questionnaire_responses']['creative'] = data.get('creative')
+        return jsonify({'redirect': url_for('questionnaire', step=3)})
+    elif step == 3:
+        session['questionnaire_responses']['social'] = data.get('social')
+        return jsonify({'redirect': url_for('questionnaire', step=4)})
+    elif step == 4:
+        session['questionnaire_responses']['technical'] = data.get('technical')
+        # Process final results
+        return jsonify({'redirect': url_for('recommendations')})
 
 @app.route('/submit_questionnaire', methods=['POST'])
+@login_required
 def submit_questionnaire():
     try:
         data = request.get_json()
@@ -274,69 +341,60 @@ def submit_questionnaire():
 @app.route('/recommendations')
 @login_required
 def recommendations():
-    try:
-        if 'scores' not in session:
-            return redirect(url_for('questionnaire'))
-        
-        # Get personality type and recommendations
-        scores = session['scores']
-        personality_type, dimension_scores = get_personality_type(scores)
-        
-        # Get major recommendations
-        db = get_db()
-        cursor = db.cursor()
-        
-        # Get all majors with their weights
-        cursor.execute('''
-            SELECT id, name, description, career_opportunities, required_skills,
-                   analytical_weight, creative_weight, social_weight, technical_weight
-            FROM majors
-        ''')
-        majors = cursor.fetchall()
-        
-        # Calculate match scores
-        recommendations = []
-        for major in majors:
-            # Calculate skill match scores
-            analytical_match = 1 - abs(scores['analytical_score']/10 - major['analytical_weight'])
-            creative_match = 1 - abs(scores['creative_score']/10 - major['creative_weight'])
-            social_match = 1 - abs(scores['social_score']/10 - major['social_weight'])
-            technical_match = 1 - abs(scores['technical_score']/10 - major['technical_weight'])
-            
-            # Calculate overall match score (weighted average)
-            match_score = (analytical_match + creative_match + social_match + technical_match) / 4
-            
-            recommendations.append({
-                'major': major,
-                'match_score': round(match_score * 100, 1),
-                'analytical_match': round(analytical_match * 100, 1),
-                'creative_match': round(creative_match * 100, 1),
-                'social_match': round(social_match * 100, 1),
-                'technical_match': round(technical_match * 100, 1)
-            })
-        
-        # Sort recommendations by match score
-        recommendations.sort(key=lambda x: x['match_score'], reverse=True)
-        
-        return render_template('recommendations.html',
-                             personality_type=personality_type,
-                             recommendations=recommendations[:5])  # Top 5 recommendations
-    except Exception as e:
-        logger.error(f"Error in recommendations: {str(e)}")
-        return render_template('recommendations.html',
-                             error=str(e))
-
-@app.errorhandler(Exception)
-def handle_error(error):
-    """Global error handler"""
-    code = 500
-    if isinstance(error, HTTPException):
-        code = error.code
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
     
-    logger.error(f"Error occurred: {str(error)}")
-    return jsonify(error=str(error)), code
+    if not session.get('questionnaire_responses'):
+        return redirect(url_for('questionnaire'))
+    
+    # Get user's questionnaire responses
+    user_scores = session.get('questionnaire_responses')
+    
+    # Get all majors from the database
+    db = get_db()
+    majors_data = db.execute('''
+        SELECT m.id, m.name, m.description, m.careers, m.skills,
+               m.analytical_weight, m.creative_weight, m.social_weight, m.technical_weight
+        FROM majors m
+    ''').fetchall()
+    
+    # Calculate match percentages and prepare major data
+    majors = []
+    for major in majors_data:
+        # Calculate match percentage based on weights
+        analytical_match = 100 - abs(float(user_scores['analytical']) - (float(major['analytical_weight']) * 10))
+        creative_match = 100 - abs(float(user_scores['creative']) - (float(major['creative_weight']) * 10))
+        social_match = 100 - abs(float(user_scores['social']) - (float(major['social_weight']) * 10))
+        technical_match = 100 - abs(float(user_scores['technical']) - (float(major['technical_weight']) * 10))
+        
+        match_percentage = (analytical_match + creative_match + social_match + technical_match) / 4
+        
+        majors.append({
+            'name': major['name'],
+            'description': major['description'],
+            'careers': major['careers'].split(','),
+            'skills': major['skills'].split(','),
+            'match_percentage': round(match_percentage),
+            'weights': {
+                'analytical': float(major['analytical_weight']),
+                'creative': float(major['creative_weight']),
+                'social': float(major['social_weight']),
+                'technical': float(major['technical_weight'])
+            }
+        })
+    
+    # Sort majors by match percentage (highest first)
+    majors.sort(key=lambda x: x['match_percentage'], reverse=True)
+    
+    # Take top 3 matches
+    top_majors = majors[:3]
+    
+    return render_template('recommendations.html',
+                         majors=top_majors,
+                         user_scores=user_scores)
 
 @app.route('/api/majors', methods=['GET'])
+@login_required
 def get_majors():
     """
     Get all majors
@@ -363,6 +421,7 @@ def get_majors():
         raise
 
 @app.route('/api/personality-types', methods=['GET'])
+@login_required
 def get_personality_types():
     """
     Get all personality types
@@ -385,50 +444,116 @@ def get_personality_types():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        remember = request.form.get('remember') == 'on'
+    # Check if user is already logged in
+    if 'user_id' in session:
+        print("\n=== Already Logged In ===")
+        print(f"User ID in session: {session['user_id']}")
+        return redirect(url_for('questionnaire'))
         
-        db = get_db()
+    if request.method == 'POST':
+        print("\n=== Login Form Data ===")
+        print("Form data received:", dict(request.form))
+        print("Raw form data:", request.get_data(as_text=True))
+        
+        email = request.form['email'].strip()
+        password = request.form['password']
         error = None
-        user = db.execute(
-            'SELECT * FROM users WHERE email = ?', (email,)
-        ).fetchone()
-
-        if user is None:
-            error = 'Incorrect email.'
-        elif not check_password_hash(user['password'], password):
-            error = 'Incorrect password.'
-
-        if error is None:
-            session.clear()
-            session['user_id'] = user['id']
-            if remember:
-                # Session will last longer when remember is checked
-                session.permanent = True
-            return redirect(url_for('index'))
-
-        flash(error)
+        
+        print(f"\n=== Login Attempt ===")
+        print(f"Email provided: '{email}'")
+        print(f"Email length: {len(email)}")
+        print(f"Email characters (ASCII): {[ord(c) for c in email]}")
+        
+        try:
+            # Direct database connection for debugging
+            print("\nTrying direct database connection...")
+            import sqlite3
+            db_path = 'recruitmentbuddy.db'
+            print(f"Database path: {db_path}")
+            print(f"Database exists: {os.path.exists(db_path)}")
+            
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Check if database has the users table
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            tables = cursor.fetchall()
+            print("\nAll database tables:")
+            for table in tables:
+                print(f"- {table['name']}")
+                # Show schema for each table
+                cursor.execute(f"PRAGMA table_info({table['name']})")
+                columns = cursor.fetchall()
+                for col in columns:
+                    print(f"  * {col['name']} ({col['type']})")
+            
+            # Get all users
+            cursor.execute('SELECT * FROM users')
+            all_users = cursor.fetchall()
+            print("\nAll users in database:")
+            for u in all_users:
+                print(f"- ID: {u['id']}, Email: '{u['email']}', Name: {u['first_name']} {u['last_name']}")
+            
+            # Try to find our user
+            cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+            user = cursor.fetchone()
+            
+            if user:
+                print(f"\nUser found:")
+                print(f"- ID: {user['id']}")
+                print(f"- Email: '{user['email']}'")
+                print(f"- Name: {user['first_name']} {user['last_name']}")
+                
+                if check_password_hash(user['password'], password):
+                    print("\n=== Login Successful ===")
+                    session.clear()
+                    session['user_id'] = user['id']
+                    print(f"Set user_id in session to: {session['user_id']}")
+                    flash('Successfully logged in!', 'success')
+                    conn.close()
+                    print("Redirecting to questionnaire...")
+                    return redirect(url_for('questionnaire'))
+                else:
+                    error = 'Incorrect password.'
+                    print(f"\nLogin failed: {error}")
+            else:
+                error = 'Invalid email address.'
+                print(f"\nLogin failed: {error}")
+            
+            conn.close()
+            flash(error, 'error')
+            return render_template('login.html', error=error)
+            
+        except Exception as e:
+            print(f"\nLogin error: {str(e)}")
+            print("Exception type:", type(e))
+            import traceback
+            print("Traceback:", traceback.format_exc())
+            flash('An error occurred during login.', 'error')
+            return render_template('login.html', error='Server error')
 
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        terms = request.form.get('terms') == 'on'
-        
-        db = get_db()
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
         error = None
+        db = get_db()
 
-        if not name or not email or not password:
-            error = 'All fields are required.'
-        elif not terms:
-            error = 'You must accept the Terms & Conditions.'
+        if not first_name:
+            error = 'First name is required.'
+        elif not last_name:
+            error = 'Last name is required.'
+        elif not email:
+            error = 'Email is required.'
+        elif not password:
+            error = 'Password is required.'
         elif password != confirm_password:
             error = 'Passwords do not match.'
         elif db.execute(
@@ -438,13 +563,21 @@ def signup():
 
         if error is None:
             db.execute(
-                'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-                (name, email, generate_password_hash(password))
+                'INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)',
+                (first_name, last_name, email, generate_password_hash(password))
             )
             db.commit()
-            return redirect(url_for('login'))
+            # Log the user in automatically after signup
+            user = db.execute(
+                'SELECT * FROM users WHERE email = ?', (email,)
+            ).fetchone()
+            session.clear()
+            session['user_id'] = user['id']
+            flash('Account created successfully! Welcome to RecruitmentBuddy!', 'success')
+            return redirect(url_for('index'))
 
-        flash(error)
+        flash(error, 'error')
+        return render_template('signup.html', error=error)
 
     return render_template('signup.html')
 
@@ -457,6 +590,16 @@ def logout():
 def forgot_password():
     # TODO: Implement password reset functionality
     return "Password reset functionality coming soon!"
+
+# Add session debugging
+@app.before_request
+def debug_session():
+    print("\n=== Session Debug ===")
+    print("Session data:", dict(session))
+    print("Request path:", request.path)
+    print("Request method:", request.method)
+    if request.method == 'POST':
+        print("Form data:", dict(request.form))
 
 if __name__ == '__main__':
     init_db()

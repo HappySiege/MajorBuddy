@@ -1,0 +1,133 @@
+<!-- Major Details Modal -->
+<div class="modal fade" id="majorDetailsModal" tabindex="-1" aria-labelledby="majorDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-bottom border-primary">
+                <h5 class="modal-title accent-text" id="majorDetailsModalLabel"></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs nav-fill mb-4" id="majorDetailsTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                            Overview
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="careers-tab" data-bs-toggle="tab" data-bs-target="#careers" type="button" role="tab">
+                            Careers
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="skills-tab" data-bs-toggle="tab" data-bs-target="#skills" type="button" role="tab">
+                            Skills
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="requirements-tab" data-bs-toggle="tab" data-bs-target="#requirements" type="button" role="tab">
+                            Requirements
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab content -->
+                <div class="tab-content" id="majorDetailsContent">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="accent-text mb-3">About this Major</h6>
+                                <p class="text-light-emphasis description mb-4"></p>
+                                
+                                <h6 class="accent-text mb-3">Why Choose This Major?</h6>
+                                <ul class="list-unstyled text-light-emphasis highlights">
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-primary bg-opacity-10 border-primary">
+                                    <div class="card-body">
+                                        <h6 class="accent-text mb-3">Quick Facts</h6>
+                                        <ul class="list-unstyled mb-0">
+                                            <li class="mb-2">
+                                                <i class="bi bi-mortarboard me-2"></i>
+                                                <span class="degree-type">Bachelor's Degree</span>
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-clock me-2"></i>
+                                                <span>4 Years</span>
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="bi bi-graph-up me-2"></i>
+                                                <span class="job-outlook">High Growth</span>
+                                            </li>
+                                            <li>
+                                                <i class="bi bi-currency-dollar me-2"></i>
+                                                <span class="salary-range">$60,000 - $120,000</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Careers Tab -->
+                    <div class="tab-pane fade" id="careers" role="tabpanel">
+                        <div class="row row-cols-1 row-cols-md-2 g-4 careers-list">
+                        </div>
+                    </div>
+
+                    <!-- Skills Tab -->
+                    <div class="tab-pane fade" id="skills" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="accent-text mb-3">Core Skills</h6>
+                                <ul class="list-unstyled skills-list">
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="accent-text mb-3">Your Match</h6>
+                                <div class="chart-container" style="position: relative; height: 300px;">
+                                    <canvas id="modalSkillsChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requirements Tab -->
+                    <div class="tab-pane fade" id="requirements" role="tabpanel">
+                        <div class="row">
+                            <div class="col-12">
+                                <h6 class="accent-text mb-3">Prerequisites</h6>
+                                <ul class="list-unstyled prerequisites-list">
+                                </ul>
+
+                                <h6 class="accent-text mb-3 mt-4">Required Courses</h6>
+                                <div class="accordion" id="coursesAccordion">
+                                    <!-- Year 1 -->
+                                    <div class="accordion-item bg-dark">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#year1">
+                                                First Year
+                                            </button>
+                                        </h2>
+                                        <div id="year1" class="accordion-collapse collapse show">
+                                            <div class="accordion-body year1-courses">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Additional years will be added dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-primary">
+                <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary learn-more-link" target="_blank">Learn More</a>
+            </div>
+        </div>
+    </div>
+</div>

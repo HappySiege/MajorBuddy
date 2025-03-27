@@ -3,39 +3,77 @@
 {% block title %}Sign Up{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center min-vh-100 align-items-center">
-    <div class="col-md-6 col-lg-4">
-        <div class="card shadow-lg">
-            <div class="card-body p-5">
-                <h2 class="text-center mb-4 accent-text">Create Account</h2>
-                <form method="POST" action="{{ url_for('signup') }}">
-                    <div class="mb-4">
-                        <label for="name" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="confirm_password" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                    </div>
-                    <div class="mb-4 form-check">
-                        <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
-                        <label class="form-check-label" for="terms">I agree to the Terms & Conditions</label>
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">Sign Up</button>
-                    </div>
-                    <div class="text-center mt-4">
-                        <p class="mb-0">Already have an account? <a href="{{ url_for('login') }}" class="accent-text text-decoration-none">Login</a></p>
-                    </div>
-                </form>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row align-items-center w-100" style="max-width: 900px;">
+        <!-- Mascot Section -->
+        <div class="col-md-6 text-center mb-4 mb-md-0">
+            <img src="{{ url_for('static', filename='images/mascot.jpg') }}" alt="RecruitmentBuddy Mascot" 
+                 class="img-fluid rounded-circle mb-3" style="max-width: 200px;">
+            <h2 class="h3 accent-text">Join RecruitmentBuddy</h2>
+            <p class="text-light-emphasis">Start your journey to finding the perfect major!</p>
+        </div>
+        
+        <!-- Signup Form -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-primary">
+                <div class="card-body p-4">
+                    <h1 class="h3 mb-4 text-center accent-text">Create Account</h1>
+                    
+                    <form method="POST" action="{{ url_for('signup') }}">
+                        <!-- First Name Input -->
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label text-light">First Name</label>
+                            <input type="text" class="form-control bg-dark text-light border-primary" 
+                                   id="first_name" name="first_name" required>
+                        </div>
+
+                        <!-- Last Name Input -->
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label text-light">Last Name</label>
+                            <input type="text" class="form-control bg-dark text-light border-primary" 
+                                   id="last_name" name="last_name" required>
+                        </div>
+                        
+                        <!-- Email Input -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-light">Email</label>
+                            <input type="email" class="form-control bg-dark text-light border-primary" 
+                                   id="email" name="email" required>
+                        </div>
+                        
+                        <!-- Password Input -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label text-light">Password</label>
+                            <input type="password" class="form-control bg-dark text-light border-primary" 
+                                   id="password" name="password" required>
+                        </div>
+
+                        <!-- Confirm Password Input -->
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label text-light">Confirm Password</label>
+                            <input type="password" class="form-control bg-dark text-light border-primary" 
+                                   id="confirm_password" name="confirm_password" required>
+                        </div>
+
+                        <!-- Error Message -->
+                        {% if error %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Create Account</button>
+                        </div>
+                    </form>
+                    
+                    <!-- Login Link -->
+                    <p class="mt-4 mb-0 text-center text-light-emphasis">
+                        Already have an account? 
+                        <a href="{{ url_for('login') }}" class="text-primary text-decoration-none">Login</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

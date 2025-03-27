@@ -7,13 +7,15 @@ DROP TABLE IF EXISTS major_recommendations;
 DROP TABLE IF EXISTS personality_types;
 DROP TABLE IF EXISTS major_personality_matches;
 
--- Create users table
+-- Users table
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create personality types table
@@ -27,17 +29,51 @@ CREATE TABLE personality_types (
 );
 
 -- Create majors table
+DROP TABLE IF EXISTS majors;
 CREATE TABLE majors (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    description TEXT,
-    career_opportunities TEXT,
-    required_skills TEXT,
-    analytical_weight FLOAT,    -- Weight for analytical skills (0-1)
-    creative_weight FLOAT,      -- Weight for creative skills (0-1)
-    social_weight FLOAT,        -- Weight for social skills (0-1)
-    technical_weight FLOAT      -- Weight for technical skills (0-1)
+    description TEXT NOT NULL,
+    careers TEXT NOT NULL,
+    skills TEXT NOT NULL,
+    analytical_weight REAL NOT NULL,
+    creative_weight REAL NOT NULL,
+    social_weight REAL NOT NULL,
+    technical_weight REAL NOT NULL
 );
+
+-- Insert initial majors
+INSERT INTO majors (name, description, careers, skills, analytical_weight, creative_weight, social_weight, technical_weight)
+VALUES 
+    ('Computer Science', 
+     'Study of computation, programming, and information systems', 
+     'Software Engineer,Data Scientist,Systems Analyst', 
+     'Programming,Problem-solving,Mathematical reasoning', 
+     0.9, 0.6, 0.4, 0.9),
+    
+    ('Psychology', 
+     'Study of human behavior and mental processes', 
+     'Counselor,Research Psychologist,Human Resources', 
+     'Active listening,Research,Empathy,Analysis', 
+     0.7, 0.5, 0.9, 0.3),
+    
+    ('Graphic Design', 
+     'Visual communication and digital art creation', 
+     'UI/UX Designer,Brand Designer,Art Director', 
+     'Visual design,Creativity,Software proficiency', 
+     0.4, 0.9, 0.6, 0.7),
+    
+    ('Mechanical Engineering', 
+     'Design and manufacturing of mechanical systems', 
+     'Product Designer,Manufacturing Engineer,R&D Engineer', 
+     'Mathematics,CAD,Problem-solving', 
+     0.9, 0.7, 0.5, 0.9),
+    
+    ('Business Administration', 
+     'Management of business operations and strategy', 
+     'Business Manager,Entrepreneur,Consultant', 
+     'Leadership,Financial analysis,Communication', 
+     0.7, 0.6, 0.8, 0.5);
 
 -- Create major requirements table
 CREATE TABLE major_requirements (

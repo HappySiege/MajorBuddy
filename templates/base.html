@@ -65,6 +65,17 @@
         .small-progress {
             height: 4px;
         }
+        /* Flash message styling */
+        .alert-success {
+            background-color: #1b5e20;
+            border-color: #2e7d32;
+            color: #e8f5e9;
+        }
+        .alert-error {
+            background-color: #b71c1c;
+            border-color: #c62828;
+            color: #ffebee;
+        }
     </style>
 </head>
 <body>
@@ -83,11 +94,37 @@
                         <a class="nav-link" href="/questionnaire">Questionnaire</a>
                     </li>
                 </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if session.user_id %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                        </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
 
     <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </div>
 
